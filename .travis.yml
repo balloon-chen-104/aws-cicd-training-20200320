@@ -7,3 +7,29 @@ script:
 
 notifications:
   email: false
+
+before_deploy:
+  - zip -r latest.zip *
+  - test -d deploy || mkdir deploy
+  - mv latest.zip deploy/latest.zip
+
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+    bucket: balloonchen-104corp-travis-source
+    local_dir: deploy
+    skip_cleanup: true
+    region: $DEFAULT_REGION
+    on:
+      branch: master
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+    bucket: balloonchen-104corp-travis-source
+    key: latest.zip
+    application: balloonchen
+    deployment_group: master
+    region: $DEFAULT_REGION
+    on:
+      branch: master
